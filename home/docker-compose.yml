@@ -1,7 +1,7 @@
 services:
   certs:
     build:
-      context: certs
+      context: ssl
       dockerfile: Dockerfile
     volumes:
      - certs-data:/certs
@@ -16,6 +16,11 @@ services:
      - mariadb-data:/var/lib/mysql
     networks:
       - app-networks
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -26,8 +31,13 @@ services:
     networks:
       - app-networks
     depends_on:
-      - mariadb:
+      mariadb:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api | grep -q 'Hello World!'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
     build:
@@ -38,9 +48,9 @@ services:
     networks:
       - app-networks
     depends_on:
-      - backend:
+      backend:
         condition: service_healthy
-      - mariadb:
+      mariadb:
         condition: service_healthy
 
   nginx:
@@ -55,11 +65,11 @@ services:
     networks:
       - app-networks
     depends_on:
-      - frontend:
+      frontend:
         condition: service_healthy
-      - backend:
+      backend:
         condition: service_healthy
-      - certs:
+      certs:
         condition: service_completed_successfully
 
   

@@ -1,9 +1,10 @@
 FROM node:25.9-alpine3.23 AS base
-RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+RUN npm install -g pnpm@10.33.0
 
 FROM base AS deps
 WORKDIR /app
-COPY ./app/package.json /app/package.json
+COPY ./app/package.json ./package.json
+COPY ./app/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --frozen-lockfile
 
 FROM deps AS build

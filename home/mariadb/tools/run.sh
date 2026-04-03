@@ -12,4 +12,7 @@ if [ ! -d /var/lib/mysql/mysql ]; then
 	mariadb-admin shutdown
 fi
 
-exec mariadbd
+mkdir -p /run/mysqld
+chown mysql:mysql /run/mysqld
+
+exec mariadbd --user=mysql
