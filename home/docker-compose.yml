@@ -1,0 +1,73 @@
+services:
+  certs:
+    build:
+      context: certs
+      dockerfile: Dockerfile
+    volumes:
+     - certs-data:/certs
+
+  mariadb:
+    build:
+      context: mariadb
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+     - mariadb-data:/var/lib/mysql
+    networks:
+      - app-networks
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    networks:
+      - app-networks
+    depends_on:
+      - mariadb:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    networks:
+      - app-networks
+    depends_on:
+      - backend:
+        condition: service_healthy
+      - mariadb:
+        condition: service_healthy
+
+  nginx:
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    ports:
+     - "8443:8443"
+     - "8080:8080"
+    volumes:
+      - certs-data:/certs
+    networks:
+      - app-networks
+    depends_on:
+      - frontend:
+        condition: service_healthy
+      - backend:
+        condition: service_healthy
+      - certs:
+        condition: service_completed_successfully
+
+  
+volumes:
+  certs-data:
+  mariadb-data:
+
+networks:
+  app-networks:
+    driver: 
+      bridge
