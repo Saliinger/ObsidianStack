@@ -1,0 +1,11 @@
+service:
+  nginx:
+    build: ./home/nginx/Dockerfile
+    ports:
+      - "8443:8443"
+    networks:
+      - app-networks
+
+networks:
+  app-networks:
+    driver: bridge
